@@ -3,6 +3,7 @@
 # MMT Extended Utility Functions
 #
 ##########################################################################################
+
 abort() {
   ui_print "$1"
   rm -rf $MODPATH 2>/dev/null
@@ -229,7 +230,11 @@ for i in $(find $MODPATH -type f -name "*.sh" -o -name "*.prop" -o -name "*.rule
   case $i in
     "$MODPATH/service.sh") install_script -l $i;;
     "$MODPATH/post-fs-data.sh") install_script -p $i;;
-    "$MODPATH/uninstall.sh") [ -s $INFO ] && install_script $MODPATH/uninstall.sh || rm -f $INFO $MODPATH/uninstall.sh;;
+    "$MODPATH/uninstall.sh") if [ -s $INFO ] || [ "$(head -n1 $MODPATH/uninstall.sh)" != "# Don't modify anything after this" ]; then
+                               install_script $MODPATH/uninstall.sh
+                             else
+                               rm -f $INFO $MODPATH/uninstall.sh
+                             fi;;
   esac
 done
 
@@ -267,9 +272,3 @@ set_permissions
 
 # Complete install
 cleanup
-
-if [ -e /system/priv-app/ims/ims.apk ]; then
-  mv $MODPATH/ims.apk $MODPATH/system/priv-app/ims
-  else
-  mv $MODPATH/ims.apk $MODPATH/system/app/ims
-fi
